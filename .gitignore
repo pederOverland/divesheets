@@ -2,3 +2,4 @@ export/*.xlsx
 bin
 obj
 .vscode
+dc.xml
