@@ -661,7 +661,7 @@ public partial class JudgePanel {
     }
     
     /// <remarks/>
-    [System.Xml.Serialization.XmlAttributeAttribute(DataType="integer")]
+    [System.Xml.Serialization.XmlAttributeAttribute()]
     public string[] rounds {
         get {
             return this.roundsField;
@@ -1716,6 +1716,7 @@ public partial class Participant {
     private Text firstnameField;
     
     private Text lastnameField;
+    private Text genderField;
     
     private IdRef teamField;
     
@@ -1742,6 +1743,16 @@ public partial class Participant {
         }
     }
     
+    /// <remarks/>
+    [System.Xml.Serialization.XmlElementAttribute("gender")]
+    public Text gender {
+        get {
+            return this.genderField;
+        }
+        set {
+            this.genderField = value;
+        }
+    }
     /// <remarks/>
     [System.Xml.Serialization.XmlElementAttribute("last-name")]
     public Text lastname {
