@@ -10,11 +10,6 @@ namespace tmp
 {
     class Program
     {
-        class Person
-        {
-            public string firstName { get; set; }
-            public string lastName { get; set; }
-        }
         static List<Participant> cParticipants;
         static List<Team> cTeams;
         static void Main(string[] args)
@@ -42,7 +37,7 @@ namespace tmp
                 var e = ev as Event;
                 if (e == null)
                 {
-                    //createJump(ev as )
+                    createIndividual(ev as EventSet);
                 }
                 else if (e.synchro)
                 {
@@ -107,7 +102,7 @@ namespace tmp
                 });
                 package.Workbook.Worksheets.Copy(skeleton, "Blank Sheet");
                 package.Workbook.Worksheets.Delete(skeleton);
-                package.SaveAs(new FileInfo("export/" + DateTime.Now.ToString() + "_" + e.title.value + ".xlsx"));
+                package.SaveAs(new FileInfo("export/" + e.title.value + ".xlsx"));
             }
         }
         private static void createJump(Event e)
@@ -152,48 +147,65 @@ namespace tmp
                 });
                 package.Workbook.Worksheets.Copy(skeleton, "Blank Sheet");
                 package.Workbook.Worksheets.Delete(skeleton);
-                package.SaveAs(new FileInfo("export/" + DateTime.Now.ToString() + "_" + e.title.value + ".xlsx"));
+                package.SaveAs(new FileInfo("export/" + e.title.value + ".xlsx"));
             }
         }
-
-        private static void createIndividual(Event e)
+        private static void createIndividual(EventSet e)
         {
             var filename = @"ind.xlsx";
             var file = new FileInfo(filename);
             var skeleton = "Individual dive sheet";
+            var preliminary = e.Items.First() as Event;
             using (var package = new ExcelPackage(file))
             {
-                e.divers.ToList().ForEach(d =>
+                preliminary.divers.ToList().ForEach(d =>
                 {
                     var participants = d.participant.ToList().Select(pa => cParticipants.FirstOrDefault(x => x.id == pa.id));
                     var teamString = String.Join("/", participants.Select(x=>cTeams.FirstOrDefault(t=>t.id==x.team.id).shortname.value));
                     var p = participants.FirstOrDefault();
                     var cells = package.Workbook.Worksheets.Copy(skeleton, p.firstname.value + " " + p.lastname.value).Cells;
-                    cells["B7"].Value = p.lastname.value;
-                    cells["M7"].Value = p.firstname.value;
-                    cells["V7"].Value = teamString;
-                    if (e.series.onem)
+                    var category = e.name.value[0];
+                    cells["B5"].Value = p.lastname.value;
+                    cells["M5"].Value = p.firstname.value;
+                    cells["V5"].Value = teamString;
+                    cells["V8"].Value = p.birthyear.value;
+                    cells["Q8"].Value = category.ToString();
+                    if (preliminary.series.onem)
+                    {
+                        cells["J8"].Value = "X";
+                    }
+                    if (preliminary.series.threem)
                     {
                         cells["J10"].Value = "X";
                     }
-                    if (e.series.threem)
+                    if (preliminary.series.platform)
                     {
                         cells["J12"].Value = "X";
                     }
-                    if (e.series.platform)
+                    if (preliminary.series.men)
                     {
-                        cells["J14"].Value = "X";
+                        cells["Q10"].Value = "X";
                     }
-                    if (e.series.men)
+                    if (preliminary.series.women)
                     {
                         cells["Q12"].Value = "X";
                     }
-                    if (e.series.women)
-                    {
-                        cells["Q14"].Value = "X";
-                    }
-                    var line = 20;
+                    var line = 18;
                     d.divelist.dive?.ToList().ForEach(dl =>
+                    {
+                        var arr = dl.dive.ToList();
+                        var start = arr.Count() == 5 ? 'C' : 'D';
+                        arr.ForEach(dlc =>
+                        {
+                            cells[(start++) + line.ToString()].Value = dlc.ToString();
+                        });
+                        cells["I" + line].Value = getHeight(dl.height);
+                        cells["K" + line].Value = dl.dd;
+                        line += 2;
+                    });
+                    line = 43;
+                    var skip = preliminary.series.platform ? 4 : 5;
+                    d.divelist.dive?.Skip(skip).ToList().ForEach(dl =>
                     {
                         var arr = dl.dive.ToList();
                         var start = arr.Count() == 5 ? 'C' : 'D';
@@ -208,11 +220,10 @@ namespace tmp
                 });
                 package.Workbook.Worksheets.Copy(skeleton, "Blank Sheet");
                 package.Workbook.Worksheets.Delete(skeleton);
-                package.SaveAs(new FileInfo("export/" + DateTime.Now.ToString() + "_" + e.title.value + ".xlsx"));
+                package.SaveAs(new FileInfo("export/" + e.name.value + ".xlsx"));
             }
         }
-
-        private static object getHeight(height height)
+        private static string getHeight(height height)
         {
             switch (height)
             {
